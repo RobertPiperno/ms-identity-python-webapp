@@ -1,18 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Microsoft Identity Python Web App: Index</title>
-</head>
-<body>
-    <h1>Microsoft Identity Python Web App</h1>
-    <h2>Welcome {{ user.get("name") }}!</h2>
+{% extends '_template.html' %}
+{% block content %}
+	<head>
+	<style>
+		ul {
+			list-style: none;
+		}
+	</style>
+	</head>
+	<div align=center>
+    <h1>Welcome to Starmark Advantage!</h1>
+    <h3>Good morning {{ user.get("name") }}</h2>
 
     <ul>
     {% if config.get("ENDPOINT") %}
-      <li><a href='/call_downstream_api'>Call a downstream API</a></li>
+      <li><a href='/dailyreport'>Collector Worklist</a></li>
     {% endif %}
-
+    {% if user.get("name") == "Robert Piperno" %}
+      <li><a href='/admindaily'>Admin Worklist Report</a></li>
+    {% endif %}
+    {% if user.get("name") == "Alex Petras" %}
+      <li><a href='/inventory'>Inventory Report</a></li>
+    {% endif %}
     {% if config.get("B2C_PROFILE_AUTHORITY") %}
       <li><a href='{{config.get("B2C_PROFILE_AUTHORITY")}}?client_id={{config.get("CLIENT_ID")}}'>Edit Profile</a></li>
     {% endif %}
@@ -20,8 +28,5 @@
     <li><a href="/logout">Logout</a></li>
     </ul>
 
-    <hr>
-    <footer style="text-align: right">Microsoft identity platform Web App Sample {{ version }}</footer>
-</body>
-</html>
-
+    </div>
+    {% endblock %}

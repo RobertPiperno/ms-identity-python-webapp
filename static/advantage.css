@@ -1,0 +1,85 @@
+* {box-sizing: border-box}
+
+/* Center and adjust the size of the text in the table header cells */
+.table thead th {
+    text-align: center;
+    font-size: 16px; /* Adjust the font size as needed */
+  }
+  
+  /* Center and adjust the size of the text in the table data cells */
+  .table tbody td {
+    text-align: center;
+    font-size: 14px; /* Adjust the font size as needed */
+  }
+
+/* Add CSS styles for the caret icons */
+.caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  content: "";
+  border: 4px solid transparent;
+  position: absolute;
+  top: 5px;
+  right: 10px;
+}
+
+th {
+  position: relative;
+  cursor: pointer;
+  text-align:center;
+}
+
+.caret-up {
+  border-top: 4px solid #ffffff; /* Change the color as desired */
+}
+
+.caret-down {
+  border-bottom: 4px solid #ffffff; /* Change the color as desired */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+
+
+.group-column {
+  flex: 0 0 auto; /* Let columns adjust based on content without growing beyond their initial size */
+  margin-right: 5px; /* Add some spacing between columns */
+  min-width: 50px; /* Set a minimum width for each column to ensure proper visibility */
+}
+
+.group-column h3 {
+  text-align: center; /* Center the group header */
+}
+
+.group-column select {
+  width: 100%; /* Set the select element to occupy full width of the group column */
+}
+
+/* Adjust the container width when it exceeds 80% */
+.select-container.container-scroll {
+  overflow-x: auto;
+  max-width: 100%; /* Set to 100% to enable horizontal scrollbar */
+}
+
+/* Remove the default styling on select elements */
+select {
+  appearance: none;
+  background: transparent;
+  background-image: none;
+  border: 1px solid #ccc;
+  padding: 5px;
+  font-size: 16px;
+  border-radius: 5px;
+  outline: none;
+}
+
+/* Style the select when focused */
+select:focus {
+  border-color: #007bff;
+}

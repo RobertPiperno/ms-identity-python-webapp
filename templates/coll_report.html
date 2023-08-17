@@ -1,0 +1,477 @@
+{% extends '_template.html' %}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Collector Report</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .common-header {
+            width: 25%; /* Adjust the width as needed */
+        }
+
+        .postDates {
+            display: none;
+        }
+		
+		.collections {
+            display: none;
+        }
+
+        .showButton {
+            cursor: pointer;
+            text-decoration: underline;
+            color: blue;
+        }
+
+        .showButton2 {
+            cursor: pointer;
+            text-decoration: underline;
+            color: blue;
+        }
+
+        .collection {
+            background-color: rgb(235, 255, 235);
+        }
+
+        .type-column {
+            background-color: rgb(255, 229, 226);
+        }
+
+        .italic-text {
+            font-style: italic;
+            color: rgb(63, 62, 62);
+        }
+    .nsf-row {
+        background-color: rgb(244, 120, 120) !important;
+        color: black; /* You might need to adjust text color for better visibility */
+    }
+</style>
+</head>
+
+<body>
+    <h4 align=center>Collections and Post Dated Payments</h4>
+    {% if flagPass == True %}
+        <h5 align=center>Select Collector to view</h5>
+            <p align=center><select name="wList" id="wList" label="test">
+                <option value="9001" style="display:none" selected>Select Collector...</option>
+                <option value="102">Alex Petras</option>
+                <option value="217">Anthony Furia</option>
+                <option value="218">Anthony Tyson</option>
+                <option value="204">Bill Moore</option>
+                <option value="206">Brian Abramson</option>
+                <option value="207">Charlene Shelinsky</option>
+                <option value="121">Daniel Venditti</option>
+                <option value="105">Frank Bianchimano</option>
+                <option value="216">George Simms</option>
+                <option value="201">Jennifer Stevenson</option>
+                <option value="213">Joy Bianchimano</option>
+                <option value="202">Justin Marinelli</option>
+                <option value="212">Lori Hurlock</option>
+                <option value="215">Marquis Damiyr</option>
+                <option value="219">Nicholas Rapino</option>
+                <option value="101">Brett Silver</option>
+                <option value="150">Angela Decker</option>
+                <option value="151">Karen Emberger</option>
+                <option value="152">Jennifer Martin</option>
+                <option value="107">Heather Ogden</option>
+                <option value="800">Contingent Inventory</option>
+                <option value="500">Inventory</option>
+                <option value="501">Choice Pay 45s</option>
+                <option value="502">Choice Pay Salvage</option>
+                <option value="503">Indebted</option>
+                <option value="750">Purch Client Specific Salvage</option>
+                <option value="506">Hair Club (direct)</option>
+                <option value="510">LUTHER CURRENT</option>
+                <option value="511">LUTHER DELINQ</option>
+                <option value="904">Possible Sale</option>
+                <option value="700">Purchased Acct Inventory</option>
+                <option value="799">Purchased Acct Salvage</option>
+                <option value="905">Contingent Recalled Accounts</option>
+                <option value="122">Outsourced Legal</option>
+                <option value="805">Omega Contingent Accts</option>
+                <option value="850">Cont Client Specific Salvage</option>
+                <option value="705">Bell Global Purchase</option>
+                <option value="899">Contingent Salvage</option>
+                <option value="920">Closed Contingency (multi statuses)</option>
+                <option value="940">Closed Purchased (multi statuses)</option>
+                <option value="806">UAS-60 day Contingent</option>
+                <option value="706">Luther Current Purch 7010</option>
+                <option value="707">Luther DELQ Purch</option>
+            </select>
+            <button onclick = populateTable();> Run Report </button>
+			</p>
+    {% endif %}
+
+    <p></p>
+
+    <table id="yestTable">
+        <thead>
+            <tr>
+                <th class="common-header" id="PaymentHeader"></th>
+                <th class="common-header">Collected Today</th>
+                <th class="common-header">Fees Today</th>
+                <th class="common-header">Commission Today</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Summary data will be populated dynamically -->
+        </tbody>
+    </table>
+    <table id="monthTable">
+        <thead>
+            <tr>
+                <th class="common-header">Pmts MTD</th>
+                <th class="common-header">Collected MTD</th>
+                <th class="common-header">Fees MTD</th>
+                <th class="common-header">Commission MTD</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Summary data will be populated dynamically -->
+        </tbody>
+    </table>
+	
+    <table id="summaryTable">
+        <thead>
+            <tr>
+                <th class="common-header">Post Dates this Month</th>
+                <th class="common-header">Post Date $$</th>
+                <th class="common-header">Potential Fees</th>
+                <th class="common-header">Potential Commission</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Summary data will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <table id="totTable">
+        <thead>
+            <tr>
+                <th class="common-header">Total # of Pmts</th>
+                <th class="common-header">Total $$</th>
+                <th class="common-header">Total Fees</th>
+                <th class="common-header">Total Commissions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Summary data will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <p class="showButton2" onclick="toggleCollections()" id="toggleCollections">Show Collections [+]</p>
+
+	<div class="collections">
+        <h4 align=center>All Collections Made</h4>
+        <table id="colTable">
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Debt</th>
+					<th>Debt_No</th>
+					<th>Debtor</th>
+                    <th>Pmt Date</th>
+                    <th>Pmt Type</th>
+					<th>Amount</th>
+                    <th>Fees</th>
+                    <th>Commission</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Individual data will be populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+
+    <p class="showButton" onclick="togglePostDates()">Show Post Dates [+]</p>
+
+    <div class="postDates">
+        <h4 align=center>All Post Dates Scheduled</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Client</th>
+                    <th>Debt</th>
+					<th>Debt_No</th>
+					<th>Debtor</th>
+                    <th>Pmt Date</th>
+                    <th>Pmt Type</th>
+					<th>Amount</th>
+                    <th>Fees</th>
+                    <th>Commission</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Individual data will be populated dynamically -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+    // Formatting yest
+    const yest = new Date();
+    yest.setDate(yest.getDate() - 1); // Set yest to previous day
+	console.log(yest);
+    const header = document.getElementById("PaymentHeader")
+    const yestYear = yest.getFullYear();
+    const yestMonth = yest.getMonth() + 1
+    const yestDay = yest.getDate()
+	
+    const formattedYest = `${yestYear}-${yestMonth}-${yestDay}`;
+    header.innerHTML = "Pmts on " + formattedYest
+
+
+    var dataFromPython = '{{ data | tojson | safe }}';
+    var parsedData = JSON.parse(dataFromPython);
+    var workList = '{{ worklist | tojson | safe }}';
+    var flag = '{{ flagPass | safe }}'
+
+    wList = workList.split("\"").join('')
+        // Function to populate the main table and individual data
+        function populateTable() {
+            let listValue = document.getElementById('wList');
+            chooseList = listValue.value;
+
+            switch(chooseList) {
+                case '9001':
+                    wList = workList.split("\"").join('');
+                    break;
+                default:
+                    wList = chooseList;
+                    break;
+            }
+
+            const summaryTableBody = document.querySelector("#summaryTable tbody");
+            const postDatesTableBody = document.querySelector(".postDates tbody");
+            const totTableBody = document.querySelector("#totTable tbody");
+            const yestTableBody = document.querySelector("#yestTable tbody");
+			//const yearTableBody = document.querySelector("#yearTable tbody");
+            const monthTableBody = document.querySelector("#monthTable tbody");
+            const colTableBody = document.querySelector("#colTable tbody");
+
+              // Clear existing data in the tables
+            summaryTableBody.innerHTML = '';
+            postDatesTableBody.innerHTML = '';
+            totTableBody.innerHTML = '';
+            yestTableBody.innerHTML = '';
+			//yearTableBody.innerHTML = '';
+            monthTableBody.innerHTML = '';
+            colTableBody.innerHTML = '';
+
+            let yestCount = 0;
+            let yestAmountPmt = 0;
+            let yestFee = 0;
+            let yestCommission = 0;
+
+            let totalCount = 0;
+            let totalAmountPmt = 0;
+            let totalFee = 0;
+            let totalCommission = 0;
+
+            let colCount = 0;
+            let colAmountPmt = 0;
+            let colFee = 0;
+            let colCommission = 0;
+
+            //let yearCount = 0;
+            //let yearAmountPmt = 0;
+            //let yearFee = 0;
+            //let yearCommission = 0;
+
+            let postCount = 0;
+            let postAmountPmt = 0;
+            let postFee = 0;
+            let postCommission = 0;
+
+            let monthCount = 0;
+            let monthAmountPmt = 0;
+            let monthFee = 0;
+            let monthCommission = 0;
+
+            postDatesData = [];
+            colData = [];
+
+            console.log("NEW BUTTON PRESS")
+            parsedData.forEach((data) => {
+                if (wList === data.dbtr_assign_id && data.type != 'Collected' && data.type != 'NSF') {
+                        postDatesData.push(data);
+                }
+
+                if(wList === data.dbtr_assign_id) {
+                    const dataCheckDate = new Date(data.check_date); // Convert to Date object if needed
+
+                    const dataCheckYear = dataCheckDate.getFullYear();
+                    const dataCheckMonth = String(dataCheckDate.getMonth() + 1); // Month is 0-indexed
+                    const dataCheckDay = String(dataCheckDate.getDate() +1);
+                    const formattedDataCheckDate = `${dataCheckYear}-${dataCheckMonth}-${dataCheckDay}`;
+				
+					
+                    totalCount++;
+                    totalAmountPmt += Number(data.check_amt);
+                    totalFee += Number(data.Fees);
+                    totalCommission += Number(data.Comm);
+					
+
+                    const dataCheckYearM = dataCheckDate.getFullYear();
+                    const dataCheckMonthM = dataCheckDate.getMonth() + 1;
+					
+      
+					//Calculates the Pmts for just yeterday
+                    if(dataCheckDay === String(yestDay)) {
+						//console.log(data);
+                        yestCount++;
+                        yestAmountPmt += Number(data.check_amt);
+                        yestFee += Number(data.Fees);
+                        yestCommission += Number(data.Comm);
+                    }
+
+					//This is for the Months payments collected
+                    if(data.type === 'Collected' || data.type === 'NSF') {
+						monthCount++;
+                        monthAmountPmt += Number(data.check_amt);
+                        monthFee += Number(data.Fees);
+                        monthCommission += Number(data.Comm);
+						//data.check_date = formattedDataCheckDate.setDate(formattedDataCheckDate.getDate() + 1);
+						//console.log(data.check_date);
+                        colData.push(data);
+                    }
+
+					//This is for all PostDated items
+                    if(data.type != 'Collected' && data.type != 'NSF') {
+							postCount++;
+							postAmountPmt += Number(data.check_amt);
+							postFee += Number(data.Fees);
+							postCommission += Number(data.Comm);
+					
+                    }
+                }
+                
+            });
+
+            postDatesData.sort((a, b) => new Date(a.check_date) - new Date(b.check_date));
+
+            postDatesData.forEach((data) => {
+            const row = document.createElement("tr");
+			//console.log(data.check_date);
+            row.innerHTML = `<td>${data.clt_id}</td>
+                            <td>${data.debtor_id}</td>
+							<td>${data.debt_no}</td>
+                            <td>${data.dbtr_name1}</td>
+                            <td>${data.check_date}</td>
+                            <td class="type-column">${data.type}</td>
+                            <td>${formatCurrency(Number(data.check_amt))}</td>
+                            <td>${formatCurrency(Number(data.Fees))}</td>
+                            <td class="collection">${formatCurrency(Number(data.Comm))}</td>`;
+            postDatesTableBody.appendChild(row);
+            });
+
+            const totRow = document.createElement("tr");
+            totRow.innerHTML = `<td>${totalCount}</td>
+                                    <td>${formatCurrency(totalAmountPmt)}</td>
+                                    <td>${formatCurrency(totalFee)}</td>
+                                    <td>${formatCurrency(totalCommission)}</td>`;
+
+            const yestRow = document.createElement("tr");
+            yestRow.innerHTML = `<td>${yestCount}</td>
+                                <td>${formatCurrency(yestAmountPmt)}</td>
+                                <td>${formatCurrency(yestFee)}</td>
+                                <td>${formatCurrency(yestCommission)}</td>`;
+
+            const summaryRow = document.createElement("tr");
+            summaryRow.innerHTML = `<td>${postCount}</td>
+                                <td>${formatCurrency(postAmountPmt)}</td>
+                                <td>${formatCurrency(postFee)}</td>
+                                <td>${formatCurrency(postCommission)}</td>`;
+
+            // Populate the monthTable
+            const monthRow = document.createElement("tr");
+            monthRow.innerHTML = `<td>${monthCount}</td>
+                                <td>${formatCurrency(monthAmountPmt)}</td>
+                                <td>${formatCurrency(monthFee)}</td>
+                                <td>${formatCurrency(monthCommission)}</td>`;
+            monthTableBody.appendChild(monthRow);
+
+
+            colData.sort((a, b) => new Date(a.check_date) - new Date(b.check_date));
+
+            colData.forEach((data) => {
+            const row = document.createElement("tr");
+                if(data.type === "NSF") {row.classList.add("nsf-row");}
+			console.log(data.check_date);
+            row.innerHTML = `<td>${data.clt_id}</td>
+                            <td>${data.debtor_id}</td>
+							<td>${data.debt_no}</td>
+                            <td>${data.dbtr_name1}</td>
+                            <td>${data.check_date}</td>
+                            <td class="type-column">${data.type}</td>
+                            <td>${formatCurrency(Number(data.check_amt))}</td>
+                            <td>${formatCurrency(Number(data.Fees))}</td>
+                            <td class="collection">${formatCurrency(Number(data.Comm))}</td>`;
+            colTableBody.appendChild(row);
+            });
+
+            summaryTableBody.appendChild(summaryRow);
+            totTableBody.appendChild(totRow);
+            yestTableBody.appendChild(yestRow);
+        }
+
+        function formatCurrency(amount) {
+            return amount.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2 });
+        }
+
+
+        populateTable();
+
+        // Function to toggle the postDates div visibility
+        function togglePostDates() {
+            const postDatesDiv = document.querySelector(".postDates");
+            const showButton = document.querySelector(".showButton");
+
+            if (postDatesDiv.style.display === "none") {
+                postDatesDiv.style.display = "block";
+                showButton.innerText = "Hide Post Dates [-]";
+            } else {
+                postDatesDiv.style.display = "none";
+                showButton.innerText = "Show Post Dates [+]";
+            }
+        }
+		
+		// Function to toggle the Collections div visibility
+        function toggleCollections() {
+            const collectionsDiv = document.querySelector(".collections");
+            const showButton2 = document.querySelector(".showButton2");
+
+            if (collectionsDiv.style.display === "none") {
+                collectionsDiv.style.display = "block";
+                showButton2.innerText = "Hide Collections [-]";
+            } else {
+                collectionsDiv.style.display = "none";
+                showButton2.innerText = "Show Collections [+]";
+            }
+        }
+    </script>
+</body>
+
+</html>
+
+
+{% endblock %}

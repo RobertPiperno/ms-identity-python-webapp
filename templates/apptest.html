@@ -1,0 +1,311 @@
+{% extends '_template.html' %}
+{% block content %}
+<style>
+  /* Set the width of the DateLoaded column to auto */
+  #mytable th:nth-child(1),
+  #mytable td:nth-child(1) {
+      width: 100px;
+  }
+  #mytable th:nth-child(6),
+  #mytable td:nth-child(6) {
+      width: 120px;
+  }
+  #boption {
+    font-weight: bold;
+  }
+  
+  </style>
+  <div align=center>
+    <h2>Starmark Admin Report</h2>
+
+    <label for="woList">Choose a worklist:</label> 
+
+<select name="woList" id="woList">
+	<option id="boption" value="">Select a Worklist to view...</option>
+    <option value="217">Anthony Furia (217)</option>
+    <option value="218">Anthony Tyson (218)</option>
+    <option value="204">Bill Moore (204)</option>
+    <option value="206">Brian Abramson (206)</option>
+    <option value="207">Charlene Shelinsky (207)</option>
+    <option value="216">George Simms (216)</option>
+    <option value="201">Jennifer Stevenson (201)</option>
+	<option value="213">Joy Bianchimano (213)</option>
+    <option value="202">Justin Marinelli (202)</option>
+    <option value="212">Lori Hurlock (212)</option>
+    <option value="215">Marquis Damiyr (215)</option>
+    <option value="219">Nicholas Rapino (219)</option>
+	<option value=""></option>
+	<option value="">--------------------------</option>
+	<option value=""></option>
+	<option value="121">Daniel Venditti (121)</option>
+    <option value="105">Frank Bianchimano (105)</option>
+    <option value="101">Brett Silver (101)</option>
+    <option value="102">Alex Petras (102)</option>	
+    <option value="150">Angela Decker (150)</option>
+    <option value="151">Karen Emberger (151)</option>
+    <option value="152">Jennifer Martin (152)</option>
+    <option value="107">Heather Ogden (107)</option>
+    <option value="122">Outsourced Legal (122)</option>	
+	<option value=""></option>
+	<option value="">--------------------------</option>
+	<option value=""></option>
+	<option value=""><b>Contingent Locations</option>
+    <option value="800">Contingent Inventory (800)</option>
+    <option value="805">Omega Contingent Accts (805)</option>
+    <option value="806">UAS-60 day Contingent (806)</option>
+    <option value="850">Cont Client Specific Salvage (850)</option>
+    <option value="899">Contingent Salvage (899)</option>
+	<option value=""></option>
+	<option value="">--------------------------</option>
+	<option value=""></option>
+	<option value=""><b>Purchased Locations</option>
+    <option value="700">Purchased Acct Inventory (700)</option>
+    <option value="705">Bell Global Purchase (705)</option>
+    <option value="706">Luther Current Purch 7010 (706)</option>
+    <option value="707">Luther DELQ Purch (707)</option>
+    <option value="750">Purch Client Specific Salvage (750)</option>
+	<option value="799">Purchased Acct Salvage (799)</option>
+	<option value=""></option>
+	<option value="">--------------------------</option>
+	<option value=""></option>
+	<option value=""><b>New Sold/Closed Locations</option>
+    <option value="900">SOLD ACCOUNTS (900)</option>
+    <option value="904">Possible Sale (904)</option>
+    <option value="905">Contingent Recalled Accounts (905)</option>
+    <option value="920">Closed Contingency (multi statuses) (920)</option>
+    <option value="940">Closed Purchased (multi statuses) (940)</option>
+    <option value="999">Errors/Mistakes-DontUSE (999)</option>
+	<option value=""></option>
+	<option value="">--------------------------</option>
+	<option value=""></option>
+	<option value=""><b>OLD Locations</option>	
+    <option value="500">Old Inventory (500)</option>
+    <option value="501">Choice Pay 45s (501)</option>
+    <option value="502">Choice Pay Salvage (502)</option>
+    <option value="503">Indebted (503)</option>
+    <option value="504">SALE (504)</option>
+    <option value="506">Hair Club (direct) (506)</option>
+    <option value="510">LUTHER CURRENT (510)</option>
+    <option value="511">LUTHER DELINQ (511)</option>	
+</select>
+<button onclick = populateTable();> Submit </button><p>
+    <p>Type in the Search field to filter the table:</p>
+<p><input type="text" id="myinput" placeholder="Search..." title="Type in something"></p>
+    <p>Click on the header of a column to sort the table:</p>
+
+    <table class="table table-bordered table-sm table-striped table-hover">
+      <thead class="table-dark"><tr>
+        <th><span id="DateLoaded" class="w3-button table-column">ListDate<i class="caret"></i></span></th>
+        <th><span id="StarmarkID" class="w3-button table-column">DebtID<i class="caret"></i></span></th>
+        <th><span id="DebtNo" class="w3-button table-column">DebtNO<i class="caret"></i></span></th>
+        <th><span id="CltRefNo" class="w3-button table-column">CltRefNo<i class="caret"></i></span></th>
+        <th><span id="Name" class="w3-button table-column">Name<i class="caret"></i></span></th>
+        <th><span id="Phone" class="w3-button table-column">Phone</span><i class="caret"></i></span></th>
+        <th><span id="CallCount" class="w3-button table-column">CallCount<i class="caret"></i></span></th>
+        <th><span id="CurBalance" class="w3-button table-column">CurBalance<i class="caret"></i></span></th>
+        <th><span id="StatusCode" class="w3-button table-column">StatusCode<i class="caret"></i></span></th>
+        <th><span id="Descr" class="w3-button table-column">Descr<i class="caret"></i></span></th>
+
+        <th><span id="ClientID" class="w3-button table-column">ClientID<i class="caret"></i></span></th>
+        <th><span id="ClientName" class="w3-button table-column">ClientName<i class="caret"></i></span></th>
+      </tr></thead>
+      <tbody id="mytable"></tbody>
+    </table>
+  </div> 
+</div>
+<script>
+var table = document.getElementById('mytable');
+var input = document.getElementById('myinput');
+var dataFromPython = '{{ data | tojson | safe }}';
+var parsedData = JSON.parse(dataFromPython);
+var tableData = parsedData;
+var caretUpClassName = 'fa fa-caret-up';
+var caretDownClassName = 'fa fa-caret-down';
+
+
+
+
+
+
+
+const sort_by = (field, reverse, primer) => {
+
+  const key = primer ?
+    function(x) {
+      return primer(x[field]);
+    } :
+    function(x) {
+      return x[field];
+    };
+
+  reverse = !reverse ? 1 : -1;
+
+  return function(a, b) {
+    return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+  };
+};
+
+
+function clearArrow() {
+  let carets = document.getElementsByClassName('caret');
+  for (let caret of carets) {
+    caret.className = "caret";
+  }
+}
+
+
+function toggleArrow(event) {
+  let element = event.target;
+  let caret, field, reverse;
+  if (element.tagName === 'SPAN') {
+    caret = element.getElementsByClassName('caret')[0];
+    field = element.id;
+  } else {
+    caret = element;
+    field = element.parentElement.id;
+  }
+
+  let iconClassName = caret.className;
+  clearArrow();
+  if (iconClassName.includes(caretUpClassName)) {
+    caret.className = `caret ${caretDownClassName}`;
+    caret.classList.add('caret-down');
+    caret.classList.remove('caret-up');
+    reverse = false;
+  } else {
+    caret.className = `caret ${caretUpClassName}`;
+    caret.classList.add('caret-up');
+    caret.classList.remove('caret-down');
+    reverse = true;
+  }
+
+  parsedData.sort(sort_by(field, reverse));
+  populateTable();
+}
+
+
+function populateTable() {
+  let listValue = document.getElementById('woList');
+  wList = listValue.value;
+  table.innerHTML = '';
+
+  for (let data of tableData) {
+    if(Number(data.Worklist) == wList) {
+      let row = table.insertRow(-1);
+
+      let DateLoaded = row.insertCell(0);
+      DateLoaded.innerHTML = data.DateLoaded;
+
+      let StarmarkID = row.insertCell(1);
+      StarmarkID.innerHTML = data.StarmarkID;
+
+      let DebtNo = row.insertCell(2);
+      DebtNo.innerHTML = data.DebtNo;
+
+      let CltRefNo = row.insertCell(3);
+      CltRefNo.innerHTML = data.CltRefNo;
+
+      let Name = row.insertCell(4);
+      Name.innerHTML = data.Name;
+
+      let Phone = row.insertCell(5);
+      Phone.innerHTML = `${formatPhoneNumber(data.Phone)}`;
+
+      let CallCount = row.insertCell(6);
+      CallCount.innerHTML = data.CallCount;
+
+      let CurBalance = row.insertCell(7);
+      CurBalance.innerHTML = `${formatCurrency(Number(data.CurBalance))}`;
+      
+      let StatusCode = row.insertCell(8);
+      StatusCode.innerHTML = data.StatusCode;
+      
+      let Descr = row.insertCell(9);
+      Descr.innerHTML = data.descr;
+      
+      
+      let ClientID = row.insertCell(10);
+      ClientID.innerHTML = data.ClientID;
+      
+      let ClientName = row.insertCell(11);
+      ClientName.innerHTML = data.ClientName;
+      
+      
+    }
+}
+    
+  
+  
+  
+
+  
+
+  filterTable();
+}
+
+function formatCurrency(amount) {
+			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+		}
+
+function formatPhoneNumber(phoneNumber) {
+    // Remove non-numeric characters from the phone number
+    const numericPhoneNumber = phoneNumber.replace(/\D/g, '');
+
+    // Format the numeric phone number into a human-readable format
+    const formattedPhoneNumber = numericPhoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+
+    return formattedPhoneNumber;
+}
+
+
+function filterTable() {
+  let filter = input.value.toUpperCase();
+  rows = table.getElementsByTagName("TR");
+
+  if (filter === "") {
+    for (let row of rows) {
+      row.style.display = ""; // Show all rows when filter is empty
+      let cells = row.getElementsByTagName("TD");
+      for (let cell of cells) {
+        cell.style.backgroundColor = ''; // Remove background color
+      }
+    }
+    return; // Exit the function early
+  }
+
+  for (let row of rows) {
+    let cells = row.getElementsByTagName("TD");
+    let flag = false;
+
+    for (let cell of cells) {
+      if (cell.innerText.toUpperCase().indexOf(filter) > -1) {
+        cell.style.backgroundColor = 'yellow';
+        flag = true;
+      } else {
+        cell.style.backgroundColor = '';
+      }
+    }
+
+    if (flag) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  }
+}
+
+populateTable();
+
+let tableColumns = document.getElementsByClassName('table-column');
+
+for (let column of tableColumns) {
+  column.addEventListener('click', function(event) {
+    toggleArrow(event);
+  });
+}
+
+input.addEventListener('keyup', function(event) {
+  filterTable();
+});
+</script>
+{% endblock %}
