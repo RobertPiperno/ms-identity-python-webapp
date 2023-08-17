@@ -1,0 +1,110 @@
+{% extends '_template.html' %}
+{% block content %}
+  <h2 id="nameInput">Fails/NSFs Report for: {{ user.get("name") }}</h2>
+  <div>
+    
+    <p>Key in your input to filter the table:</p>
+
+    <input type="text" id="myinput" placeholder="Search..." title="Type in something">
+
+    <p>Click on the header of a column to sort the table:</p>
+
+    <table class="table table-bordered table-sm table-striped table-hover">
+      <thead class="table-dark"><tr>
+        <th><span id="Debtor" class="w3-button table-column">Debtor<i class="caret"></i></span></th>
+        <th><span id="Transdate" class="w3-button table-column">Transaction Date<i class="caret"></i></span></th>
+        <th><span id="Pmt_amt" class="w3-button table-column">Pmt Amount<i class="caret"></i></span></th>
+        <th><span id="Notes" class="w3-button table-column">Notes<i class="caret"></i></span></th>
+        <th><span id="Status" class="w3-button table-column">Status<i class="caret"></i></span></th>
+      </tr></thead>
+      <tbody id="mytable"></tbody>
+    </table>
+  </div> 
+
+<script>
+
+var table = document.getElementById('mytable');
+var input = document.getElementById('myinput');
+var dataFromPython = '{{ data | tojson | safe }}';
+var parsedData = JSON.parse(dataFromPython);
+var tableData = parsedData;
+var caretUpClassName = 'fa fa-caret-up';
+var caretDownClassName = 'fa fa-caret-down';
+var name = nameInput.textContent || nameInput.innerText;
+var wList = '{{ worklist }}';
+
+
+function formatCurrency(amount) {
+			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+		}
+	
+
+function populateTable() {
+  table.innerHTML = '';
+
+  for (let data of tableData) {
+    if(data.Worklist == wList) {
+      let row = table.insertRow(-1);
+
+      let Debtor = row.insertCell(0);
+      Debtor.innerHTML = data.Debtor;
+
+      let TransDate = row.insertCell(1);
+      TransDate.innerHTML = data.TransDate;
+
+      let Pmt_amt = row.insertCell(2);
+      Pmt_amt.innerHTML = data.Pmt_amt;
+
+      let Notes = row.insertCell(3);
+      Notes.innerHTML = data.Notes;
+
+      let Status = row.insertCell(4);
+      Status.innerHTML = data.Status;
+
+    }
+    }
+
+  filterTable();
+}
+
+function filterTable() {
+  let filter = input.value.toUpperCase();
+  rows = table.getElementsByTagName("TR");
+  let flag = false;
+
+  for (let row of rows) {
+    let cells = row.getElementsByTagName("TD");
+    for (let cell of cells) {
+      if (cell.textContent.toUpperCase().indexOf(filter) > -1) {
+        if (filter) {
+          cell.style.backgroundColor = 'yellow';
+        } else {
+          cell.style.backgroundColor = '';
+        }
+
+        flag = true;
+      } else {
+        cell.style.backgroundColor = '';
+      }
+    }
+
+    if (flag) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+
+    flag = false;
+  }
+}
+
+
+populateTable();
+
+let tableColumns = document.getElementsByClassName('table-column');
+
+input.addEventListener('keyup', function(event) {
+  filterTable();
+});
+</script>
+{% endblock %}

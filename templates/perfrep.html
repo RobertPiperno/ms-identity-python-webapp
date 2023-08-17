@@ -1,0 +1,60 @@
+{% extends '_template.html' %}
+{% block content %}
+<style>
+    /* Center the table horizontally */
+    #perfTable {
+        align: center;
+        max-width: 100%
+    }
+</style>
+
+	<h2 align=center>Client Performance Report</h2>
+    <table id="perfTable" class="table table-bordered table-sm table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                {% for key in data[0] %}
+                <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+
+<script>
+    var dataFromPython = '{{ data | tojson | safe }}';
+    var data = JSON.parse(dataFromPython);
+    console.log(data)
+
+    function populateTable(){
+        const tableBody = document.querySelector('#perfTable tbody');
+        data.forEach((item) => {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${item.CLT_ID}</td>
+                            <td>${item.LIST_DATE}</td>
+                            <td>${item.AcctsListed}</td>
+                            <td>${formatCurrency(item.AmountListed)}</td>
+                            <td>${formatCurrency(item.AvgBalance)}</td>
+                            <td>${formatCurrency(item.Adjustments)}</td>
+                            <td>${formatCurrency(item.ColLastMonth)}</td>
+                            <td>${formatCurrency(item.ColThisMonth)}</td>
+                            <td>${formatCurrency(item.Change)}</td>
+                            <td>${formatCurrency(item.LiquidationThisMonth)}</td>
+                            <td>${formatCurrency(item.ColltoDate)}</td>
+                            <td>${formatCurrency(item.LiquidationToDate)}</td>
+                            <td>${item.UnitYield}</td>
+                            <td>${formatCurrency(item.CurrMonthPDs)}</td>`
+            tableBody.appendChild(row);
+            });
+    }
+
+    populateTable();
+
+    function formatCurrency(amount) {
+			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+		}
+	
+</script>
+
+{% endblock %}

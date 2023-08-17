@@ -1,0 +1,216 @@
+{% extends '_template.html' %}
+{% block content %}
+
+
+<head>
+    <title>Inventory by ClientID and Current Balance Ranges</title>
+    <style>
+        /* Center the header and dropdowns horizontally */
+
+        #summaryTable {
+            width: 100%;
+            border-collapse: collapse;
+			text-align: center;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid black;
+			text-align:center;
+        }
+    </style>
+    <script>
+        var dataFromPython = '{{ data | tojson | safe }}';
+        var data = JSON.parse(dataFromPython);
+
+        function populateClientsDropdown() {
+            const masterClientsDropdown = document.getElementById('masterClients');
+            const uniqueMasterClients = [...new Set(data.map(item => item.MasterID))].sort();
+            
+            uniqueMasterClients.forEach(MasterID => {
+                const option = document.createElement('option');
+                option.value = MasterID;
+                option.text = MasterID;
+                masterClientsDropdown.add(option);
+            });
+        }
+
+        function updateClientIdsDropdown() {
+            const masterClient = document.getElementById('masterClients').value;
+            const clientIdsDropdown = document.getElementById('clientIds');
+            clientIdsDropdown.innerHTML = '';
+
+            const uniqueClientIds = [...new Set(data.filter(item => item.MasterID === masterClient).map(item => item.ClientID))].sort();
+
+            uniqueClientIds.forEach(ClientID => {
+                const option = document.createElement('option');
+                option.value = ClientID;
+                option.text = ClientID;
+                option.selected = true; // Selecting all by default
+                clientIdsDropdown.add(option);
+            });
+
+            if(uniqueClientIds.length > 5) {
+                var numOptions = 5;
+            }
+            else {
+                var numOptions = uniqueClientIds.length;
+            }
+            const optionHeight = 1.5; // Adjust this value to match the height of each option in ems
+            clientIdsDropdown.style.height = `calc(${optionHeight}em * ${numOptions})`;
+            displaySummary(); // Update the summary when client IDs are changed
+        }
+
+
+        function calculateRanges(CurBal) {
+            return Math.floor(CurBal / 500) * 500;
+        }
+
+		function formatCurrency(amount) {
+			return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+		}
+
+
+        function generateSummary(selectedClientIds) {
+            const summary = {};
+            const uniqueDates = new Set();
+
+            data.forEach(item => {
+                const { ListDate, CurBal, ClientID } = item;
+
+                // Only consider data for selected Client IDs
+                if (selectedClientIds.includes(ClientID)) {
+                    uniqueDates.add(ListDate);
+                    const curBalRange = calculateRanges(CurBal);
+
+                    if (!summary[curBalRange]) {
+                        summary[curBalRange] = {};
+                    }
+
+                    if (!summary[curBalRange][ListDate]) {
+                        summary[curBalRange][ListDate] = { count: 0, sum: 0 };
+                    }
+
+                    summary[curBalRange][ListDate].count++;
+                    summary[curBalRange][ListDate].sum += Number(CurBal);
+                }
+            });
+
+            return { summary, uniqueDates: Array.from(uniqueDates).sort() };
+        }
+
+
+        function displaySummary() {
+            const selectedClientIds = Array.from(document.getElementById('clientIds').selectedOptions).map(opt => opt.value);
+            const { summary, uniqueDates } = generateSummary(selectedClientIds);
+            const table = document.getElementById('summaryTable');
+            table.innerHTML = ''; // Clear existing table contents
+
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            headerRow.classList.add("table-dark");
+
+            const headerCell = headerRow.insertCell();
+            headerCell.innerHTML = 'Cur Bal Range';
+
+            uniqueDates.forEach(date => {
+                const headerCell = headerRow.insertCell();
+                headerCell.innerHTML = date;
+            });
+
+            headerRow.insertCell().innerHTML = 'Range Total';
+
+            const tbody = table.createTBody();
+
+            const dateColumnTotals = {};
+            let grandTotalSum = 0;
+            let grandTotalCount = 0;
+
+            for (let curBalRange = 0; curBalRange <= 10000; curBalRange += 500) {
+                if (!summary[curBalRange]) continue; // Skip empty ranges
+
+                const newRow = tbody.insertRow();
+                const cellRange = newRow.insertCell();
+                cellRange.innerHTML = `${curBalRange}-${curBalRange + 500}`;
+                
+                let rowTotalSum = 0;
+                let rowTotalCount = 0;
+
+                uniqueDates.forEach(date => {
+                    const cellData = newRow.insertCell();
+                    const summaryData = summary[curBalRange][date] || { count: 0, sum: 0 };
+
+                    cellData.innerHTML = `${summaryData.count} / ${formatCurrency(summaryData.sum)}`;
+                    
+                    rowTotalSum += summaryData.sum;
+                    rowTotalCount += summaryData.count;
+
+                    if (!dateColumnTotals[date]) {
+                        dateColumnTotals[date] = { sum: 0, count: 0 };
+                    }
+
+                    dateColumnTotals[date].sum += summaryData.sum;
+                    dateColumnTotals[date].count += summaryData.count;
+                });
+
+                grandTotalSum += rowTotalSum;
+                grandTotalCount += rowTotalCount;
+
+                newRow.insertCell().innerHTML = `${rowTotalCount} / ${formatCurrency(rowTotalSum)}`;
+            }
+
+            // Insert total row for each list date column
+            const totalRow = tbody.insertRow();
+            totalRow.insertCell().innerHTML = 'List Date Total:';
+            
+            uniqueDates.forEach(date => {
+                totalRow.insertCell().innerHTML = `${dateColumnTotals[date].count} / ${formatCurrency(dateColumnTotals[date].sum)}`;
+            });
+
+            totalRow.insertCell().innerHTML = `Total Count: ${grandTotalCount}, Grand Total: ${formatCurrency(grandTotalSum)}`;
+        }
+
+        window.onload = () => {
+            populateClientsDropdown();
+            updateClientIdsDropdown(); // Automatically populate Client IDs for the first Master Client
+        };
+
+    </script>
+</head>
+
+    <h2 align=center>Inventory by ClientID and Current Balance Ranges</h2>
+<table align=center>
+    <tr>
+        <td>
+            <label for="masterClients">Master Clients: </label>
+        </td>
+        <td>
+            <select id="masterClients" onchange="updateClientIdsDropdown(); displaySummary();">
+                <!-- Master Clients dropdown populated by JavaScript -->
+            </select>
+        </td>
+
+        <td>
+            <label for="clientIds">Client IDs: </label>
+        </td>
+        <td>
+            <select id="clientIds" multiple onchange="displaySummary();">
+                <!-- Client IDs dropdown populated by JavaScript -->
+            </select>
+        </td>
+    </tr>
+	
+</table>
+&nbsp;
+	    
+    <table id="summaryTable" border="1" class="table table-bordered table-sm table-striped table-hover">
+        <thead class="table-dark">
+            <!-- JavaScript will populate the header row -->
+        </thead>
+        <!-- JavaScript will populate the table -->
+    </table>
+
+
+
+
+{% endblock %}
